@@ -1,0 +1,18 @@
+{
+  "name": "sprite-animation-canvas",
+  "version": "1.0.0",
+  "description": "A web project for rendering animated spritesheets on canvas",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "canvas",
+    "spritesheet",
+    "animation",
+    "web"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
