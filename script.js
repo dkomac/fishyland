@@ -245,6 +245,58 @@ class HoveringSprite {
     }
 }
 
+class SlowSprite extends Sprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.floatPeriodX = 30000;
+        this.floatPeriodY = 35000;
+        this.floatRadiusX = 50;
+        this.floatRadiusY = 30;
+        this.driftX = 0.05;
+        this.driftY = 0.03;
+    }
+    
+    update(currentTime) {
+        this.spriteSheet.update(currentTime);
+        
+        this.prevX = this.x;
+        
+        const elapsed = currentTime - this.startTime;
+        
+        const floatX = Math.sin(elapsed / this.floatPeriodX * Math.PI * 2) * this.floatRadiusX;
+        const floatY = Math.cos(elapsed / this.floatPeriodY * Math.PI * 2) * this.floatRadiusY;
+        
+        const driftOffsetX = Math.sin(elapsed / 20000 * Math.PI * 2) * 60;
+        const driftOffsetY = Math.cos(elapsed / 25000 * Math.PI * 2) * 40;
+        
+        this.x = this.baseX + floatX + driftOffsetX;
+        this.y = this.baseY + floatY + driftOffsetY;
+        
+        if (this.x > this.prevX) {
+            this.facingRight = true;
+        } else if (this.x < this.prevX) {
+            this.facingRight = false;
+        }
+        
+        const padding = 20;
+        if (this.x < padding) {
+            this.x = padding;
+            this.baseX = this.x;
+        } else if (this.x + this.width > canvas.width - padding) {
+            this.x = canvas.width - this.width - padding;
+            this.baseX = this.x;
+        }
+        
+        if (this.y < padding) {
+            this.y = padding;
+            this.baseY = this.y;
+        } else if (this.y + this.height > canvas.height - padding) {
+            this.y = canvas.height - this.height - padding;
+            this.baseY = this.y;
+        }
+    }
+}
+
 const sprites = [];
 let lastTime = 0;
 let backgroundImage = null;
@@ -416,10 +468,38 @@ function loadInkySprite() {
     };
 }
 
+function loadMattiasSprite() {
+    const img = new Image();
+    img.src = 'mattias.png';
+    
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 4;
+        const fps = 8;
+        
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+        
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+        
+        const x = 50;
+        const y = 50;
+        
+        const mattiasSprite = new SlowSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        sprites.push(mattiasSprite);
+    };
+    
+    img.onerror = () => {
+        console.error('Failed to load mattias.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
 loadInkySprite();
+loadMattiasSprite();
 requestAnimationFrame(animate);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -431,6 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.SpriteSheet = SpriteSheet;
 window.Sprite = Sprite;
+window.SlowSprite = SlowSprite;
 window.CrabSprite = CrabSprite;
 window.HoveringSprite = HoveringSprite;
 window.sprites = sprites;
