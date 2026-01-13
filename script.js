@@ -1,8 +1,8 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 760;
-canvas.height = 560;
+canvas.width = 960;
+canvas.height = 760;
 
 ctx.imageSmoothingEnabled = false;
 ctx.imageSmoothingQuality = 'low';
@@ -186,10 +186,70 @@ class Sprite {
     }
 }
 
+class HoveringSprite {
+    constructor(spriteSheet, x, y, width, height) {
+        this.spriteSheet = spriteSheet;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        
+        this.startTime = performance.now();
+        this.baseX = x;
+        this.baseY = y;
+        this.hoverRadiusX = 100;
+        this.hoverRadiusY = 50;
+        this.hoverPeriodX = 6000;
+        this.hoverPeriodY = 8000;
+        this.driftLeft = -0.02;
+    }
+
+    update(currentTime) {
+        this.spriteSheet.update(currentTime);
+        
+        const elapsed = currentTime - this.startTime;
+        
+        const hoverX = Math.sin(elapsed / this.hoverPeriodX * Math.PI * 2) * this.hoverRadiusX;
+        const hoverY = Math.cos(elapsed / this.hoverPeriodY * Math.PI * 2) * this.hoverRadiusY;
+        
+        this.baseX += this.driftLeft;
+        this.x = this.baseX + hoverX;
+        this.y = this.baseY + hoverY;
+        
+        const padding = 20;
+        if (this.x + this.width < -padding) {
+            this.x = canvas.width + padding;
+            this.baseX = this.x;
+        }
+        
+        if (this.y < padding) {
+            this.y = padding;
+            this.baseY = this.y;
+        } else if (this.y + this.height > canvas.height - padding) {
+            this.y = canvas.height - this.height - padding;
+            this.baseY = this.y;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        
+        ctx.imageSmoothingEnabled = false;
+        
+        const x = Math.round(this.x);
+        const y = Math.round(this.y);
+        
+        this.spriteSheet.draw(ctx, x, y, this.width, this.height);
+        
+        ctx.restore();
+    }
+}
+
 const sprites = [];
 let lastTime = 0;
 let backgroundImage = null;
 let fishSprite = null;
+let fishHasHat = false;
 
 function loadBackground() {
     const img = new Image();
@@ -250,32 +310,56 @@ function loadFishSprite() {
 function swapFishToHat() {
     if (!fishSprite) return;
     
-    const img = new Image();
-    img.src = 'fishhat.png';
+    const button = document.getElementById('hatButton');
     
-    img.onload = () => {
-        const frameWidth = 32;
-        const frameHeight = 32;
-        const frameCount = 3;
-        const fps = 8;
+    if (fishHasHat) {
+        const img = new Image();
+        img.src = 'fish.png';
         
-        const hatSpriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+        img.onload = () => {
+            const frameWidth = 32;
+            const frameHeight = 32;
+            const frameCount = 3;
+            const fps = 8;
+            
+            const normalSpriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+            fishSprite.spriteSheet = normalSpriteSheet;
+            fishHasHat = false;
+            
+            if (button) {
+                button.textContent = 'Oh wait, fishy need a hat!';
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            }
+        };
         
-        fishSprite.spriteSheet = hatSpriteSheet;
+        img.onerror = () => {
+            console.error('Failed to load fish.png');
+        };
+    } else {
+        const img = new Image();
+        img.src = 'fishhat.png';
         
-        const button = document.getElementById('hatButton');
-        if (button) {
-            button.disabled = true;
-            button.textContent = 'Fishy has a hat! 🎩';
-            button.style.opacity = '0.7';
-            button.style.cursor = 'not-allowed';
-        }
-    };
-    
-    img.onerror = () => {
-        console.error('Failed to load fishhat.png');
-        alert('Could not load fishhat.png');
-    };
+        img.onload = () => {
+            const frameWidth = 32;
+            const frameHeight = 32;
+            const frameCount = 3;
+            const fps = 8;
+            
+            const hatSpriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+            fishSprite.spriteSheet = hatSpriteSheet;
+            fishHasHat = true;
+            
+            if (button) {
+                button.textContent = 'Remove fishy hat!';
+            }
+        };
+        
+        img.onerror = () => {
+            console.error('Failed to load fishhat.png');
+            alert('Could not load fishhat.png');
+        };
+    }
 }
 
 function loadCrabSprite() {
@@ -305,9 +389,37 @@ function loadCrabSprite() {
     };
 }
 
+function loadInkySprite() {
+    const img = new Image();
+    img.src = 'inky.png';
+    
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 6;
+        const fps = 10;
+        
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+        
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+        
+        const x = canvas.width - spriteWidth - 100;
+        const y = canvas.height / 2 - 300;
+        
+        const inkySprite = new HoveringSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        sprites.push(inkySprite);
+    };
+    
+    img.onerror = () => {
+        console.error('Failed to load inky.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
+loadInkySprite();
 requestAnimationFrame(animate);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -320,6 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.SpriteSheet = SpriteSheet;
 window.Sprite = Sprite;
 window.CrabSprite = CrabSprite;
+window.HoveringSprite = HoveringSprite;
 window.sprites = sprites;
 window.canvas = canvas;
 window.ctx = ctx;
