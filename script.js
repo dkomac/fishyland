@@ -330,7 +330,7 @@ class FastSprite extends Sprite {
 
 const sprites = [];
 let lastTime = 0;
-let backgroundImage = null;
+let backgroundSpriteSheet = null;
 let fishSprite = null;
 let fishHasHat = false;
 
@@ -339,7 +339,12 @@ function loadBackground() {
     img.src = 'background.png';
     
     img.onload = () => {
-        backgroundImage = img;
+        const frameWidth = 250;
+        const frameHeight = 170;
+        const frameCount = 9;
+        const fps = 5;
+        
+        backgroundSpriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
     };
     
     img.onerror = () => {
@@ -350,9 +355,10 @@ function loadBackground() {
 function animate(currentTime) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    if (backgroundImage) {
+    if (backgroundSpriteSheet) {
+        backgroundSpriteSheet.update(currentTime);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        backgroundSpriteSheet.draw(ctx, 0, 0, canvas.width, canvas.height);
     }
     
     sprites.forEach(sprite => {
