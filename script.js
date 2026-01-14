@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 960;
+canvas.width = 1160;
 canvas.height = 760;
 
 ctx.imageSmoothingEnabled = false;
@@ -297,6 +297,37 @@ class SlowSprite extends Sprite {
     }
 }
 
+class FastSprite extends Sprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.floatPeriodX = 6000;
+        this.floatPeriodY = 7000;
+        this.floatRadiusX = 160;
+        this.floatRadiusY = 120;
+        this.driftX = 0.15;
+        this.driftY = 0.1;
+    }
+    
+    draw(ctx) {
+        ctx.save();
+        
+        ctx.imageSmoothingEnabled = false;
+        
+        const x = Math.round(this.x);
+        const y = Math.round(this.y);
+        
+        if (this.facingRight) {
+            ctx.translate(x + this.width, y);
+            ctx.scale(-1, 1);
+            this.spriteSheet.draw(ctx, 0, 0, this.width, this.height);
+        } else {
+            this.spriteSheet.draw(ctx, x, y, this.width, this.height);
+        }
+        
+        ctx.restore();
+    }
+}
+
 const sprites = [];
 let lastTime = 0;
 let backgroundImage = null;
@@ -344,8 +375,8 @@ function loadFishSprite() {
         
         const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
         
-        const spriteWidth = frameWidth * 3;
-        const spriteHeight = frameHeight * 3;
+        const spriteWidth = frameWidth * 2;
+        const spriteHeight = frameHeight * 2;
         const x = canvas.width / 2 - spriteWidth / 2;
         const y = canvas.height / 2 - spriteHeight / 2;
         
@@ -495,11 +526,39 @@ function loadMattiasSprite() {
     };
 }
 
+function loadShorkySprite() {
+    const img = new Image();
+    img.src = 'shorky.png';
+    
+    img.onload = () => {
+        const frameWidth = 65;
+        const frameHeight = 40;
+        const frameCount = 8;
+        const fps = 12;
+        
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+        
+        const spriteWidth = frameWidth * 4;
+        const spriteHeight = frameHeight * 4;
+        
+        const x = canvas.width / 2 - spriteWidth / 2;
+        const y = canvas.height / 3;
+        
+        const shorkySprite = new FastSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        sprites.push(shorkySprite);
+    };
+    
+    img.onerror = () => {
+        console.error('Failed to load shorky.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
 loadInkySprite();
 loadMattiasSprite();
+loadShorkySprite();
 requestAnimationFrame(animate);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -512,6 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.SpriteSheet = SpriteSheet;
 window.Sprite = Sprite;
 window.SlowSprite = SlowSprite;
+window.FastSprite = FastSprite;
 window.CrabSprite = CrabSprite;
 window.HoveringSprite = HoveringSprite;
 window.sprites = sprites;
