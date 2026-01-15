@@ -297,6 +297,59 @@ class SlowSprite extends Sprite {
     }
 }
 
+class PuffySprite extends Sprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.floatPeriodX = 9000;
+        this.floatPeriodY = 12000;
+        this.floatRadiusX = 8;
+        this.floatRadiusY = 5;
+        this.rotationAmplitude = Math.PI / 36; // ~5 degrees
+    }
+
+    update(currentTime) {
+        this.spriteSheet.update(currentTime);
+
+        this.prevX = this.x;
+
+        const elapsed = currentTime - this.startTime;
+
+        const floatX = Math.sin(elapsed / this.floatPeriodX * Math.PI * 2) * this.floatRadiusX;
+        const floatY = Math.cos(elapsed / this.floatPeriodY * Math.PI * 2) * this.floatRadiusY;
+
+        const driftOffsetX = Math.sin(elapsed / 15000 * Math.PI * 2) * 6;
+        const driftOffsetY = Math.cos(elapsed / 17000 * Math.PI * 2) * 6;
+
+        this.x = this.baseX + floatX + driftOffsetX;
+        this.y = this.baseY + floatY + driftOffsetY;
+
+        if (this.x > this.prevX) {
+            this.facingRight = true;
+        } else if (this.x < this.prevX) {
+            this.facingRight = false;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+
+        ctx.imageSmoothingEnabled = false;
+
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+
+        const elapsed = performance.now() - this.startTime;
+        const angle = Math.sin(elapsed / 4000 * Math.PI * 2) * this.rotationAmplitude;
+
+        ctx.translate(Math.round(centerX), Math.round(centerY));
+        ctx.rotate(angle);
+
+        this.spriteSheet.draw(ctx, -this.width / 2, -this.height / 2, this.width, this.height);
+
+        ctx.restore();
+    }
+}
+
 class FastSprite extends Sprite {
     constructor(spriteSheet, x, y, width, height) {
         super(spriteSheet, x, y, width, height);
@@ -559,12 +612,40 @@ function loadShorkySprite() {
     };
 }
 
+function loadPuffySprite() {
+    const img = new Image();
+    img.src = 'puffy.png';
+
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 11;
+        const fps = 4;
+
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+
+        const x = canvas.width - spriteWidth - 180;
+        const y = canvas.height / 2 + 100;
+
+        const puffySprite = new PuffySprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        sprites.push(puffySprite);
+    };
+
+    img.onerror = () => {
+        console.error('Failed to load puffy.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
 loadInkySprite();
 loadMattiasSprite();
 loadShorkySprite();
+loadPuffySprite();
 requestAnimationFrame(animate);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -580,6 +661,7 @@ window.SlowSprite = SlowSprite;
 window.FastSprite = FastSprite;
 window.CrabSprite = CrabSprite;
 window.HoveringSprite = HoveringSprite;
+window.PuffySprite = PuffySprite;
 window.sprites = sprites;
 window.canvas = canvas;
 window.ctx = ctx;
