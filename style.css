@@ -32,13 +32,29 @@ body {
     display: block;
 }
 
-#hatButton {
+.button-group {
     margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: auto;
+}
+
+.button-group.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#hatButton, #fullscreenButton {
     padding: 12px 24px;
     font-size: 16px;
     font-weight: 600;
     color: #fff;
     background-color: #565656;
+    border: none;
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
@@ -46,14 +62,35 @@ body {
     box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
 }
 
-#hatButton:hover {
+#hatButton:hover, #fullscreenButton:hover {
     background-color: #0052cc;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
 }
 
-#hatButton:active {
+#hatButton:active, #fullscreenButton:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
+}
+
+body.fullscreen .container {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    padding: 0;
+}
+
+body.fullscreen #gameCanvas {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+}
+
+body.fullscreen .button-group {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
 }
 

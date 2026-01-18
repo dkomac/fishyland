@@ -1,8 +1,20 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 1160;
-canvas.height = 760;
+const BASE_CANVAS_WIDTH = 1160;
+const BASE_CANVAS_HEIGHT = 760;
+
+let scaleX = 1;
+let scaleY = 1;
+
+function updateScale() {
+    scaleX = canvas.width / BASE_CANVAS_WIDTH;
+    scaleY = canvas.height / BASE_CANVAS_HEIGHT;
+}
+
+canvas.width = BASE_CANVAS_WIDTH;
+canvas.height = BASE_CANVAS_HEIGHT;
+updateScale();
 
 ctx.imageSmoothingEnabled = false;
 ctx.imageSmoothingQuality = 'low';
@@ -46,41 +58,55 @@ class SpriteSheet {
 class CrabSprite {
     constructor(spriteSheet, x, y, width, height) {
         this.spriteSheet = spriteSheet;
+        this.initialBaseX = x;
+        this.baseX = x;
+        this.baseY = y;
+        this.baseWidth = width;
+        this.baseHeight = height;
+        
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         
         this.startTime = performance.now();
-        this.baseX = x;
         this.walkRange = 150;
         this.facingRight = false;
         this.prevX = x;
     }
     
+    updateScale() {
+        this.width = this.baseWidth * scaleX;
+        this.height = this.baseHeight * scaleY;
+        this.x = this.baseX * scaleX;
+        this.y = this.baseY * scaleY;
+    }
+    
     update(currentTime) {
         this.spriteSheet.update(currentTime);
         
-        this.prevX = this.x;
+        this.prevX = this.baseX;
         
         const elapsed = currentTime - this.startTime;
         const offset = Math.sin(elapsed / 25000 * Math.PI * 2) * this.walkRange;
-        this.x = this.baseX + offset;
+        this.baseX = this.initialBaseX + offset;
         
-        if (this.x > this.prevX) {
+        if (this.baseX > this.prevX) {
             this.facingRight = true;
-        } else if (this.x < this.prevX) {
+        } else if (this.baseX < this.prevX) {
             this.facingRight = false;
         }
         
-        const padding = 20;
-        if (this.x < padding) {
-            this.x = padding;
-            this.baseX = this.x;
-        } else if (this.x + this.width > canvas.width - padding) {
-            this.x = canvas.width - this.width - padding;
-            this.baseX = this.x;
+        const basePadding = 20;
+        if (this.baseX < basePadding) {
+            this.baseX = basePadding;
+            this.initialBaseX = this.baseX;
+        } else if (this.baseX + this.baseWidth > BASE_CANVAS_WIDTH - basePadding) {
+            this.baseX = BASE_CANVAS_WIDTH - this.baseWidth - basePadding;
+            this.initialBaseX = this.baseX;
         }
+        
+        this.updateScale();
     }
     
     draw(ctx) {
@@ -106,14 +132,19 @@ class CrabSprite {
 class Sprite {
     constructor(spriteSheet, x, y, width, height) {
         this.spriteSheet = spriteSheet;
+        this.initialBaseX = x;
+        this.initialBaseY = y;
+        this.baseX = x;
+        this.baseY = y;
+        this.baseWidth = width;
+        this.baseHeight = height;
+        
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         
         this.startTime = performance.now();
-        this.baseX = x;
-        this.baseY = y;
         this.floatSpeed = 0.3;
         this.floatRadiusX = 80;
         this.floatRadiusY = 60;
@@ -125,11 +156,18 @@ class Sprite {
         this.prevX = x;
         this.facingRight = false;
     }
+    
+    updateScale() {
+        this.width = this.baseWidth * scaleX;
+        this.height = this.baseHeight * scaleY;
+        this.x = this.baseX * scaleX;
+        this.y = this.baseY * scaleY;
+    }
 
     update(currentTime) {
         this.spriteSheet.update(currentTime);
         
-        this.prevX = this.x;
+        this.prevX = this.baseX;
         
         const elapsed = currentTime - this.startTime;
         
@@ -139,31 +177,33 @@ class Sprite {
         const driftOffsetX = Math.sin(elapsed / 8000 * Math.PI * 2) * 100;
         const driftOffsetY = Math.cos(elapsed / 10000 * Math.PI * 2) * 80;
         
-        this.x = this.baseX + floatX + driftOffsetX;
-        this.y = this.baseY + floatY + driftOffsetY;
+        this.baseX = this.initialBaseX + floatX + driftOffsetX;
+        this.baseY = this.initialBaseY + floatY + driftOffsetY;
         
-        if (this.x > this.prevX) {
+        if (this.baseX > this.prevX) {
             this.facingRight = true;
-        } else if (this.x < this.prevX) {
+        } else if (this.baseX < this.prevX) {
             this.facingRight = false;
         }
         
-        const padding = 20;
-        if (this.x < padding) {
-            this.x = padding;
-            this.baseX = this.x;
-        } else if (this.x + this.width > canvas.width - padding) {
-            this.x = canvas.width - this.width - padding;
-            this.baseX = this.x;
+        const basePadding = 20;
+        if (this.baseX < basePadding) {
+            this.baseX = basePadding;
+            this.initialBaseX = this.baseX;
+        } else if (this.baseX + this.baseWidth > BASE_CANVAS_WIDTH - basePadding) {
+            this.baseX = BASE_CANVAS_WIDTH - this.baseWidth - basePadding;
+            this.initialBaseX = this.baseX;
         }
         
-        if (this.y < padding) {
-            this.y = padding;
-            this.baseY = this.y;
-        } else if (this.y + this.height > canvas.height - padding) {
-            this.y = canvas.height - this.height - padding;
-            this.baseY = this.y;
+        if (this.baseY < basePadding) {
+            this.baseY = basePadding;
+            this.initialBaseY = this.baseY;
+        } else if (this.baseY + this.baseHeight > BASE_CANVAS_HEIGHT - basePadding) {
+            this.baseY = BASE_CANVAS_HEIGHT - this.baseHeight - basePadding;
+            this.initialBaseY = this.baseY;
         }
+        
+        this.updateScale();
     }
 
     draw(ctx) {
@@ -189,19 +229,31 @@ class Sprite {
 class HoveringSprite {
     constructor(spriteSheet, x, y, width, height) {
         this.spriteSheet = spriteSheet;
+        this.initialBaseX = x;
+        this.initialBaseY = y;
+        this.baseX = x;
+        this.baseY = y;
+        this.baseWidth = width;
+        this.baseHeight = height;
+        
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         
         this.startTime = performance.now();
-        this.baseX = x;
-        this.baseY = y;
         this.hoverRadiusX = 100;
         this.hoverRadiusY = 50;
         this.hoverPeriodX = 6000;
         this.hoverPeriodY = 8000;
         this.driftLeft = -0.02;
+    }
+    
+    updateScale() {
+        this.width = this.baseWidth * scaleX;
+        this.height = this.baseHeight * scaleY;
+        this.x = this.baseX * scaleX;
+        this.y = this.baseY * scaleY;
     }
 
     update(currentTime) {
@@ -212,23 +264,25 @@ class HoveringSprite {
         const hoverX = Math.sin(elapsed / this.hoverPeriodX * Math.PI * 2) * this.hoverRadiusX;
         const hoverY = Math.cos(elapsed / this.hoverPeriodY * Math.PI * 2) * this.hoverRadiusY;
         
-        this.baseX += this.driftLeft;
-        this.x = this.baseX + hoverX;
-        this.y = this.baseY + hoverY;
+        this.initialBaseX += this.driftLeft;
+        this.baseX = this.initialBaseX + hoverX;
+        this.baseY = this.initialBaseY + hoverY;
         
-        const padding = 20;
-        if (this.x + this.width < -padding) {
-            this.x = canvas.width + padding;
-            this.baseX = this.x;
+        const basePadding = 20;
+        if (this.baseX + this.baseWidth < -basePadding) {
+            this.baseX = BASE_CANVAS_WIDTH + basePadding;
+            this.initialBaseX = this.baseX;
         }
         
-        if (this.y < padding) {
-            this.y = padding;
-            this.baseY = this.y;
-        } else if (this.y + this.height > canvas.height - padding) {
-            this.y = canvas.height - this.height - padding;
-            this.baseY = this.y;
+        if (this.baseY < basePadding) {
+            this.baseY = basePadding;
+            this.initialBaseY = this.baseY;
+        } else if (this.baseY + this.baseHeight > BASE_CANVAS_HEIGHT - basePadding) {
+            this.baseY = BASE_CANVAS_HEIGHT - this.baseHeight - basePadding;
+            this.initialBaseY = this.baseY;
         }
+        
+        this.updateScale();
     }
 
     draw(ctx) {
@@ -436,10 +490,11 @@ function loadFishSprite() {
         
         const spriteWidth = frameWidth * 2;
         const spriteHeight = frameHeight * 2;
-        const x = canvas.width / 2 - spriteWidth / 2;
-        const y = canvas.height / 2 - spriteHeight / 2;
+        const x = BASE_CANVAS_WIDTH / 2 - spriteWidth / 2;
+        const y = BASE_CANVAS_HEIGHT / 2 - spriteHeight / 2;
         
         const sprite = new Sprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        sprite.updateScale();
         fishSprite = sprite;
         sprites.push(sprite);
     };
@@ -469,7 +524,7 @@ function swapFishToHat() {
             fishHasHat = false;
             
             if (button) {
-                button.textContent = 'Oh wait, fishy need a hat!';
+                button.textContent = 'Give Mr. Fishy his hat!';
                 button.style.opacity = '1';
                 button.style.cursor = 'pointer';
             }
@@ -493,7 +548,7 @@ function swapFishToHat() {
             fishHasHat = true;
             
             if (button) {
-                button.textContent = 'Remove fishy hat!';
+                button.textContent = 'Please return Mr. Fishy’s hat to the void.';
             }
         };
         
@@ -519,10 +574,11 @@ function loadCrabSprite() {
         const spriteWidth = frameWidth * 3;
         const spriteHeight = frameHeight * 3;
         
-        const x = canvas.width / 2 - spriteWidth / 2;
-        const y = canvas.height - spriteHeight - 20;
+        const x = BASE_CANVAS_WIDTH / 2 - spriteWidth / 2;
+        const y = BASE_CANVAS_HEIGHT - spriteHeight - 20;
         
         const crabSprite = new CrabSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        crabSprite.updateScale();
         sprites.push(crabSprite);
     };
     
@@ -546,10 +602,11 @@ function loadInkySprite() {
         const spriteWidth = frameWidth * 3;
         const spriteHeight = frameHeight * 3;
         
-        const x = canvas.width - spriteWidth - 100;
-        const y = canvas.height / 2 - 300;
+        const x = BASE_CANVAS_WIDTH - spriteWidth - 100;
+        const y = BASE_CANVAS_HEIGHT / 2 - 300;
         
         const inkySprite = new HoveringSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        inkySprite.updateScale();
         sprites.push(inkySprite);
     };
     
@@ -577,6 +634,7 @@ function loadMattiasSprite() {
         const y = 50;
         
         const mattiasSprite = new SlowSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        mattiasSprite.updateScale();
         sprites.push(mattiasSprite);
     };
     
@@ -600,10 +658,11 @@ function loadShorkySprite() {
         const spriteWidth = frameWidth * 4;
         const spriteHeight = frameHeight * 4;
         
-        const x = canvas.width / 2 - spriteWidth / 2;
-        const y = canvas.height / 3;
+        const x = BASE_CANVAS_WIDTH / 2 - spriteWidth / 2;
+        const y = BASE_CANVAS_HEIGHT / 3;
         
         const shorkySprite = new FastSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        shorkySprite.updateScale();
         sprites.push(shorkySprite);
     };
     
@@ -627,10 +686,11 @@ function loadPuffySprite() {
         const spriteWidth = frameWidth * 3;
         const spriteHeight = frameHeight * 3;
 
-        const x = canvas.width - spriteWidth - 180;
-        const y = canvas.height / 2 + 100;
+        const x = BASE_CANVAS_WIDTH - spriteWidth - 180;
+        const y = BASE_CANVAS_HEIGHT / 2 + 100;
 
         const puffySprite = new PuffySprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        puffySprite.updateScale();
         sprites.push(puffySprite);
     };
 
@@ -648,11 +708,148 @@ loadShorkySprite();
 loadPuffySprite();
 requestAnimationFrame(animate);
 
+function toggleFullscreen() {
+    const container = document.querySelector('.container');
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && !document.msFullscreenElement) {
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen();
+        } else if (container.mozRequestFullScreen) {
+            container.mozRequestFullScreen();
+        } else if (container.msRequestFullscreen) {
+            container.msRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+function handleFullscreenChange() {
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                           document.mozFullScreenElement || document.msFullscreenElement);
+    
+    if (fullscreenButton) {
+        if (isFullscreen) {
+            fullscreenButton.textContent = '⛶ Exit Fullscreen';
+            document.body.classList.add('fullscreen');
+            showButtons();
+        } else {
+            fullscreenButton.textContent = '⛶ Fullscreen';
+            document.body.classList.remove('fullscreen');
+            if (buttonHideTimeout) {
+                clearTimeout(buttonHideTimeout);
+                buttonHideTimeout = null;
+            }
+            showButtons();
+        }
+    }
+    
+    resizeCanvas();
+}
+
+function resizeCanvas() {
+    const container = document.querySelector('.container');
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                           document.mozFullScreenElement || document.msFullscreenElement);
+    
+    if (isFullscreen) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    } else {
+        const containerRect = container.getBoundingClientRect();
+        const maxWidth = Math.min(1160, window.innerWidth - 40);
+        const maxHeight = Math.min(760, window.innerHeight - 40);
+        canvas.width = maxWidth;
+        canvas.height = maxHeight;
+    }
+    
+    updateScale();
+    
+    sprites.forEach(sprite => {
+        if (sprite.updateScale) {
+            sprite.updateScale();
+        }
+    });
+}
+
+let buttonHideTimeout = null;
+const BUTTON_HIDE_DELAY = 1500;
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || 
+              document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function showButtons() {
+    const buttonGroup = document.querySelector('.button-group');
+    if (buttonGroup) {
+        buttonGroup.classList.remove('hidden');
+    }
+    
+    if (buttonHideTimeout) {
+        clearTimeout(buttonHideTimeout);
+        buttonHideTimeout = null;
+    }
+    
+    if (isFullscreen()) {
+        buttonHideTimeout = setTimeout(() => {
+            hideButtons();
+        }, BUTTON_HIDE_DELAY);
+    }
+}
+
+function hideButtons() {
+    if (!isFullscreen()) {
+        return;
+    }
+    
+    const buttonGroup = document.querySelector('.button-group');
+    if (buttonGroup) {
+        buttonGroup.classList.add('hidden');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const hatButton = document.getElementById('hatButton');
     if (hatButton) {
         hatButton.addEventListener('click', swapFishToHat);
     }
+    
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    if (fullscreenButton) {
+        fullscreenButton.addEventListener('click', toggleFullscreen);
+    }
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    window.addEventListener('resize', resizeCanvas);
+    
+    document.addEventListener('mousemove', showButtons);
+    document.addEventListener('mousedown', showButtons);
+    document.addEventListener('touchstart', showButtons);
+    
+    const buttonGroup = document.querySelector('.button-group');
+    if (buttonGroup) {
+        buttonGroup.addEventListener('mouseenter', showButtons);
+    }
+    
+    showButtons();
 });
 
 window.SpriteSheet = SpriteSheet;
