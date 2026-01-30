@@ -674,8 +674,8 @@ function loadMattiasSprite() {
         const spriteWidth = frameWidth * 3;
         const spriteHeight = frameHeight * 3;
         
-        const x = 50;
-        const y = 50;
+        const x = 150;
+        const y = 150;
         
         const mattiasSprite = new SlowSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
         mattiasSprite.updateScale();
