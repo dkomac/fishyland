@@ -1,8 +1,8 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const BASE_CANVAS_WIDTH = 1160;
-const BASE_CANVAS_HEIGHT = 760;
+const BASE_CANVAS_WIDTH = 1400;
+const BASE_CANVAS_HEIGHT = 952;
 
 let scaleX = 1;
 let scaleY = 1;
@@ -404,6 +404,50 @@ class PuffySprite extends Sprite {
     }
 }
 
+class JellySprite extends Sprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.floatPeriodX = 15000;
+        this.floatPeriodY = 18000;
+        this.floatRadiusX = 12;
+        this.floatRadiusY = 8;
+    }
+
+    update(currentTime) {
+        this.spriteSheet.update(currentTime);
+
+        const elapsed = currentTime - this.startTime;
+
+        const floatX = Math.sin(elapsed / this.floatPeriodX * Math.PI * 2) * this.floatRadiusX;
+        const floatY = Math.cos(elapsed / this.floatPeriodY * Math.PI * 2) * this.floatRadiusY;
+
+        const driftOffsetX = Math.sin(elapsed / 20000 * Math.PI * 2) * 5;
+        const driftOffsetY = Math.cos(elapsed / 22000 * Math.PI * 2) * 5;
+
+        this.baseX = this.initialBaseX + floatX + driftOffsetX;
+        this.baseY = this.initialBaseY + floatY + driftOffsetY;
+
+        const basePadding = 20;
+        if (this.baseX < basePadding) {
+            this.baseX = basePadding;
+            this.initialBaseX = this.baseX;
+        } else if (this.baseX + this.baseWidth > BASE_CANVAS_WIDTH - basePadding) {
+            this.baseX = BASE_CANVAS_WIDTH - this.baseWidth - basePadding;
+            this.initialBaseX = this.baseX;
+        }
+
+        if (this.baseY < basePadding) {
+            this.baseY = basePadding;
+            this.initialBaseY = this.baseY;
+        } else if (this.baseY + this.baseHeight > BASE_CANVAS_HEIGHT - basePadding) {
+            this.baseY = BASE_CANVAS_HEIGHT - this.baseHeight - basePadding;
+            this.initialBaseY = this.baseY;
+        }
+
+        this.updateScale();
+    }
+}
+
 class FastSprite extends Sprite {
     constructor(spriteSheet, x, y, width, height) {
         super(spriteSheet, x, y, width, height);
@@ -443,11 +487,11 @@ let fishHasHat = false;
 
 function loadBackground() {
     const img = new Image();
-    img.src = 'background.png';
+    img.src = 'big-background.png';
     
     img.onload = () => {
-        const frameWidth = 250;
-        const frameHeight = 170;
+        const frameWidth = 350;
+        const frameHeight = 238;
         const frameCount = 9;
         const fps = 5;
         
@@ -699,6 +743,34 @@ function loadPuffySprite() {
     };
 }
 
+function loadJellySprite() {
+    const img = new Image();
+    img.src = 'jelly.png';
+
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 6;
+        const fps = 6;
+
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+
+        const x = BASE_CANVAS_WIDTH / 2 - spriteWidth - 500;
+        const y = BASE_CANVAS_HEIGHT / 2 - spriteHeight / 2;
+
+        const jellySprite = new JellySprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        jellySprite.updateScale();
+        sprites.push(jellySprite);
+    };
+
+    img.onerror = () => {
+        console.error('Failed to load jelly.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
@@ -706,6 +778,7 @@ loadInkySprite();
 loadMattiasSprite();
 loadShorkySprite();
 loadPuffySprite();
+loadJellySprite();
 requestAnimationFrame(animate);
 
 function toggleFullscreen() {
@@ -770,8 +843,8 @@ function resizeCanvas() {
         canvas.height = window.innerHeight;
     } else {
         const containerRect = container.getBoundingClientRect();
-        const maxWidth = Math.min(1160, window.innerWidth - 40);
-        const maxHeight = Math.min(760, window.innerHeight - 40);
+        const maxWidth = Math.min(BASE_CANVAS_WIDTH, window.innerWidth - 40);
+        const maxHeight = Math.min(BASE_CANVAS_HEIGHT, window.innerHeight - 40);
         canvas.width = maxWidth;
         canvas.height = maxHeight;
     }
@@ -859,6 +932,7 @@ window.FastSprite = FastSprite;
 window.CrabSprite = CrabSprite;
 window.HoveringSprite = HoveringSprite;
 window.PuffySprite = PuffySprite;
+window.JellySprite = JellySprite;
 window.sprites = sprites;
 window.canvas = canvas;
 window.ctx = ctx;
