@@ -71,6 +71,7 @@ class CrabSprite {
         
         this.startTime = performance.now();
         this.walkRange = 150;
+        this.walkPeriod = 25000;
         this.facingRight = false;
         this.prevX = x;
     }
@@ -88,7 +89,7 @@ class CrabSprite {
         this.prevX = this.baseX;
         
         const elapsed = currentTime - this.startTime;
-        const offset = Math.sin(elapsed / 25000 * Math.PI * 2) * this.walkRange;
+        const offset = Math.sin(elapsed / this.walkPeriod * Math.PI * 2) * this.walkRange;
         this.baseX = this.initialBaseX + offset;
         
         if (this.baseX > this.prevX) {
@@ -126,6 +127,14 @@ class CrabSprite {
         }
         
         ctx.restore();
+    }
+}
+
+class FranfranSprite extends CrabSprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.walkRange = 80;
+        this.walkPeriod = 40000;
     }
 }
 
@@ -799,6 +808,34 @@ function loadGlowySprite() {
     };
 }
 
+function loadFranfranSprite() {
+    const img = new Image();
+    img.src = 'franfran.png';
+
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 11;
+        const fps = 8;
+
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+
+        const x = 120;
+        const y = BASE_CANVAS_HEIGHT - spriteHeight - 80;
+
+        const franfranSprite = new FranfranSprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        franfranSprite.updateScale();
+        sprites.push(franfranSprite);
+    };
+
+    img.onerror = () => {
+        console.error('Failed to load franfran.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
@@ -808,6 +845,7 @@ loadShorkySprite();
 loadPuffySprite();
 loadJellySprite();
 loadGlowySprite();
+loadFranfranSprite();
 requestAnimationFrame(animate);
 
 function toggleFullscreen() {
@@ -962,6 +1000,7 @@ window.CrabSprite = CrabSprite;
 window.HoveringSprite = HoveringSprite;
 window.PuffySprite = PuffySprite;
 window.JellySprite = JellySprite;
+window.FranfranSprite = FranfranSprite;
 window.sprites = sprites;
 window.canvas = canvas;
 window.ctx = ctx;
