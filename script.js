@@ -894,6 +894,34 @@ function loadStarlySprite() {
     };
 }
 
+function loadBorisSprite() {
+    const img = new Image();
+    img.src = 'boris.png';
+
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 11;
+        const fps = 8;
+
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+
+        const x = 220;
+        const y = BASE_CANVAS_HEIGHT / 2 - spriteHeight / 2;
+
+        const borisSprite = new Sprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        borisSprite.updateScale();
+        sprites.push(borisSprite);
+    };
+
+    img.onerror = () => {
+        console.error('Failed to load boris.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
@@ -905,6 +933,7 @@ loadJellySprite();
 loadGlowySprite();
 loadFranfranSprite();
 loadStarlySprite();
+loadBorisSprite();
 requestAnimationFrame(animate);
 
 function toggleFullscreen() {
