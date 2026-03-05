@@ -360,6 +360,36 @@ class SlowSprite extends Sprite {
     }
 }
 
+class StarlySprite extends Sprite {
+    constructor(spriteSheet, x, y, width, height) {
+        super(spriteSheet, x, y, width, height);
+        this.rotationAmplitude = Math.PI / 24;
+    }
+
+    update(currentTime) {
+        this.spriteSheet.update(currentTime);
+        this.updateScale();
+    }
+
+    draw(ctx) {
+        ctx.save();
+
+        ctx.imageSmoothingEnabled = false;
+
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+
+        const elapsed = performance.now() - this.startTime;
+        const angle = Math.sin(elapsed / 3500 * Math.PI * 2) * this.rotationAmplitude;
+
+        ctx.translate(Math.round(centerX), Math.round(centerY));
+        ctx.rotate(angle);
+        this.spriteSheet.draw(ctx, -this.width / 2, -this.height / 2, this.width, this.height);
+
+        ctx.restore();
+    }
+}
+
 class PuffySprite extends Sprite {
     constructor(spriteSheet, x, y, width, height) {
         super(spriteSheet, x, y, width, height);
@@ -836,6 +866,34 @@ function loadFranfranSprite() {
     };
 }
 
+function loadStarlySprite() {
+    const img = new Image();
+    img.src = 'starly.png';
+
+    img.onload = () => {
+        const frameWidth = 32;
+        const frameHeight = 32;
+        const frameCount = 4;
+        const fps = 6;
+
+        const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
+
+        const spriteWidth = frameWidth * 3;
+        const spriteHeight = frameHeight * 3;
+
+        const x = BASE_CANVAS_WIDTH / 2 + 400;
+        const y = BASE_CANVAS_HEIGHT / 1 - spriteHeight - 40;
+
+        const starlySprite = new StarlySprite(spriteSheet, x, y, spriteWidth, spriteHeight);
+        starlySprite.updateScale();
+        sprites.push(starlySprite);
+    };
+
+    img.onerror = () => {
+        console.error('Failed to load starly.png');
+    };
+}
+
 loadBackground();
 loadFishSprite();
 loadCrabSprite();
@@ -846,6 +904,7 @@ loadPuffySprite();
 loadJellySprite();
 loadGlowySprite();
 loadFranfranSprite();
+loadStarlySprite();
 requestAnimationFrame(animate);
 
 function toggleFullscreen() {
@@ -1001,6 +1060,7 @@ window.HoveringSprite = HoveringSprite;
 window.PuffySprite = PuffySprite;
 window.JellySprite = JellySprite;
 window.FranfranSprite = FranfranSprite;
+window.StarlySprite = StarlySprite;
 window.sprites = sprites;
 window.canvas = canvas;
 window.ctx = ctx;
