@@ -906,8 +906,8 @@ function loadBorisSprite() {
 
         const spriteSheet = new SpriteSheet(img, frameWidth, frameHeight, frameCount, fps);
 
-        const spriteWidth = frameWidth * 3;
-        const spriteHeight = frameHeight * 3;
+        const spriteWidth = frameWidth * 1.5;
+        const spriteHeight = frameHeight * 1.5;
 
         const x = 220;
         const y = BASE_CANVAS_HEIGHT / 2 - spriteHeight / 2;
